@@ -18,9 +18,6 @@ package com.acmeair.web.dto;
 
 import java.io.Serializable;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlRootElement;
 
 public class AddressInfo implements Serializable {
 
