@@ -16,10 +16,13 @@
 
 package com.acmeair.web;
 
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -41,6 +44,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 @RestController
 @RequestMapping("/")
 public class CustomerServiceRest {
+	
+  @Value("${ms.hw}")
+  private Float hw;
+		
+  @Value("${server.port}")
+  private Integer port=-1;
 
   @Autowired
   CustomerService customerService;
@@ -49,6 +58,7 @@ public class CustomerServiceRest {
   private SecurityUtils secUtils;
 
   private static final Logger logger = Logger.getLogger(CustomerServiceRest.class.getName());
+  private static final AtomicInteger users = new AtomicInteger(0);
 
   /**
    * Get customer info.
@@ -56,6 +66,8 @@ public class CustomerServiceRest {
   @RequestMapping(value = "/byid/{custid}")
   public String getCustomer(@PathVariable("custid") String customerid,
       @CookieValue(value = "jwt_token", required = false) String jwtToken) {
+	  
+	  
     if (logger.isLoggable(Level.FINE)) {
       logger.fine("getCustomer : userid " + customerid);
     }
@@ -66,8 +78,12 @@ public class CustomerServiceRest {
       if (secUtils.secureUserCalls() && !secUtils.validateJwt(customerid, jwtToken)) {
         throw new ForbiddenException();
       }
+      
+      String customerFromDB = customerService.getCustomerByUsername(customerid);
+      
+      this.doWork(70);
 
-      return customerService.getCustomerByUsername(customerid);
+      return customerFromDB;
 
     } catch (Exception e) {
       e.printStackTrace();
@@ -80,7 +96,7 @@ public class CustomerServiceRest {
    */
   @RequestMapping(value = "/byid/{custid}", method = RequestMethod.POST)
   public String putCustomer(@RequestBody CustomerInfo customer,
-      @CookieValue(value = "jwt_token", required = false) String jwtToken) {
+      @CookieValue(value = "jwt_token", required = false) String jwtToken) {  
 
     String username = customer.get_id();
 
@@ -103,6 +119,8 @@ public class CustomerServiceRest {
 
     // Retrieve the latest results
     customerFromDb = customerService.getCustomerByUsernameAndPassword(username, customer.getPassword());
+    
+    this.doWork(130l);
 
     return customerFromDb;
   }
@@ -114,7 +132,6 @@ public class CustomerServiceRest {
   public ValidateCustomerResponse validateCustomer(@RequestHeader(name = "acmeair-id", required = false) String headerId,
       @RequestHeader(name = "acmeair-date", required = false) String headerDate, @RequestHeader(name = "acmeair-sig-body", required = false) String headerSigBody,
       @RequestHeader(name = "acmeair-signature", required = false) String headerSig, @RequestParam String login, @RequestParam String password) {
-
 
     if (logger.isLoggable(Level.FINE)) {
       logger.fine("validateid : login " + login + " password " + password);
@@ -131,6 +148,8 @@ public class CustomerServiceRest {
 
     ValidateCustomerResponse result = new ValidateCustomerResponse();
     result.validCustomer = validCustomer;
+    
+    this.doWork(50l);
 
     return result;
   }
@@ -189,7 +208,20 @@ public class CustomerServiceRest {
 
   @RequestMapping("/")
   public String checkStatus() {
-    return "OK";
+    return "OK"+this.port;
 
   }
+  
+  private void doWork(long stime) {
+//		Double isTime = Long.valueOf(stime).doubleValue();
+//		Float d = (float) (isTime.floatValue() * (CustomerServiceRest.users.floatValue() / this.hw));
+//		CustomerServiceRest.users.incrementAndGet();
+//		try {
+//			TimeUnit.MILLISECONDS.sleep(Math.max(Math.round(d), Math.round(isTime)));
+//		} catch (InterruptedException e) {
+//			e.printStackTrace();
+//		} finally {
+//			CustomerServiceRest.users.decrementAndGet();
+//		}
+	}
 }
