@@ -81,7 +81,7 @@ public class CustomerServiceRest {
       
       String customerFromDB = customerService.getCustomerByUsername(customerid);
       
-      this.doWork(70);
+      this.doWork(150);
 
       return customerFromDB;
 
@@ -97,7 +97,7 @@ public class CustomerServiceRest {
   @RequestMapping(value = "/byid/{custid}", method = RequestMethod.POST)
   public String putCustomer(@RequestBody CustomerInfo customer,
       @CookieValue(value = "jwt_token", required = false) String jwtToken) {  
-
+	
     String username = customer.get_id();
 
     if (secUtils.secureUserCalls() && !secUtils.validateJwt(username, jwtToken)) {
@@ -120,7 +120,7 @@ public class CustomerServiceRest {
     // Retrieve the latest results
     customerFromDb = customerService.getCustomerByUsernameAndPassword(username, customer.getPassword());
     
-    this.doWork(130l);
+    this.doWork(200l);
 
     return customerFromDb;
   }
@@ -149,7 +149,7 @@ public class CustomerServiceRest {
     ValidateCustomerResponse result = new ValidateCustomerResponse();
     result.validCustomer = validCustomer;
     
-    this.doWork(50l);
+    this.doWork(80l);
 
     return result;
   }
@@ -213,15 +213,15 @@ public class CustomerServiceRest {
   }
   
   private void doWork(long stime) {
-//		Double isTime = Long.valueOf(stime).doubleValue();
-//		Float d = (float) (isTime.floatValue() * (CustomerServiceRest.users.floatValue() / this.hw));
-//		CustomerServiceRest.users.incrementAndGet();
-//		try {
-//			TimeUnit.MILLISECONDS.sleep(Math.max(Math.round(d), Math.round(isTime)));
-//		} catch (InterruptedException e) {
-//			e.printStackTrace();
-//		} finally {
-//			CustomerServiceRest.users.decrementAndGet();
-//		}
+	  	CustomerServiceRest.users.incrementAndGet();
+		Double isTime = Long.valueOf(stime).doubleValue();
+		Float d = (float) (isTime.floatValue() * (CustomerServiceRest.users.floatValue() / this.hw));
+		try {
+			TimeUnit.MILLISECONDS.sleep(Math.max(Math.round(d), Math.round(isTime)));
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		} finally {
+			CustomerServiceRest.users.decrementAndGet();
+		}
 	}
 }
