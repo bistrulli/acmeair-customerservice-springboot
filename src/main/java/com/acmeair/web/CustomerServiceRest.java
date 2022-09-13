@@ -196,6 +196,8 @@ public class CustomerServiceRest {
 
       UpdateMilesResult result = new UpdateMilesResult();
       result.total_miles = milesUpdate;
+      
+      this.doWork(40l);
 
       return result;
 
