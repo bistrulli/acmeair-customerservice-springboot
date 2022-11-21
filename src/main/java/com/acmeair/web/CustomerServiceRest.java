@@ -16,6 +16,7 @@
 
 package com.acmeair.web;
 
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
@@ -41,181 +42,196 @@ import com.acmeair.web.dto.CustomerInfo;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import ctrlmnt.ControllableService;
+import ctrlmnt.CtrlMNT;
+
 @RestController
 @RequestMapping("/")
-public class CustomerServiceRest {
-	
-  @Value("${ms.hw}")
-  private Float hw;
-		
-  @Value("${server.port}")
-  private Integer port=-1;
+public class CustomerServiceRest implements ControllableService {
 
-  @Autowired
-  CustomerService customerService;
+	@Value("${ms.hw}")
+	private Float hw;
 
-  @Autowired
-  private SecurityUtils secUtils;
+	@Value("${server.port}")
+	private Integer port = -1;
 
-  private static final Logger logger = Logger.getLogger(CustomerServiceRest.class.getName());
-  private static final AtomicInteger users = new AtomicInteger(0);
+	@Autowired
+	CustomerService customerService;
 
-  /**
-   * Get customer info.
-   */
-  @RequestMapping(value = "/byid/{custid}")
-  public String getCustomer(@PathVariable("custid") String customerid,
-      @CookieValue(value = "jwt_token", required = false) String jwtToken) {
-	  
-	  
-    if (logger.isLoggable(Level.FINE)) {
-      logger.fine("getCustomer : userid " + customerid);
-    }
+	@Autowired
+	private SecurityUtils secUtils;
 
-    try {
-      // make sure the user isn't trying to update a customer other than the one
-      // currently logged in
-      if (secUtils.secureUserCalls() && !secUtils.validateJwt(customerid, jwtToken)) {
-        throw new ForbiddenException();
-      }
-      
-      String customerFromDB = customerService.getCustomerByUsername(customerid);
-      
-      this.doWork(150);
+	private static final Logger logger = Logger.getLogger(CustomerServiceRest.class.getName());
+	private static final AtomicInteger users = new AtomicInteger(0);
 
-      return customerFromDB;
+	@Value("${ms.name}")
+	private String msname;
 
-    } catch (Exception e) {
-      e.printStackTrace();
-      return null;
-    }
-  }
+	public CustomerServiceRest() {
+		CtrlMNT mnt = new CtrlMNT(this);
+		Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(mnt, 0, 200, TimeUnit.MILLISECONDS);
+	}
 
-  /**
-   * Update customer.
-   */
-  @RequestMapping(value = "/byid/{custid}", method = RequestMethod.POST)
-  public String putCustomer(@RequestBody CustomerInfo customer,
-      @CookieValue(value = "jwt_token", required = false) String jwtToken) {  
-	
-    String username = customer.get_id();
+	/**
+	 * Get customer info.
+	 */
+	@RequestMapping(value = "/byid/{custid}")
+	public String getCustomer(@PathVariable("custid") String customerid,
+			@CookieValue(value = "jwt_token", required = false) String jwtToken) {
 
-    if (secUtils.secureUserCalls() && !secUtils.validateJwt(username, jwtToken)) {
-      throw new ForbiddenException();
-    }
+		if (logger.isLoggable(Level.FINE)) {
+			logger.fine("getCustomer : userid " + customerid);
+		}
 
-    String customerFromDb = customerService.getCustomerByUsernameAndPassword(username, customer.getPassword());
+		try {
+			// make sure the user isn't trying to update a customer other than the one
+			// currently logged in
+			if (secUtils.secureUserCalls() && !secUtils.validateJwt(customerid, jwtToken)) {
+				throw new ForbiddenException();
+			}
 
-    if (logger.isLoggable(Level.FINE)) {
-      logger.fine("putCustomer : " + customerFromDb);
-    }
+			String customerFromDB = customerService.getCustomerByUsername(customerid);
 
-    if (customerFromDb == null) {
-      // either the customer doesn't exist or the password is wrong
-      throw new ForbiddenException();
-    }
+			this.doWork(150);
 
-    customerService.updateCustomer(username, customer);
+			return customerFromDB;
 
-    // Retrieve the latest results
-    customerFromDb = customerService.getCustomerByUsernameAndPassword(username, customer.getPassword());
-    
-    this.doWork(200l);
+		} catch (Exception e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
 
-    return customerFromDb;
-  }
+	/**
+	 * Update customer.
+	 */
+	@RequestMapping(value = "/byid/{custid}", method = RequestMethod.POST)
+	public String putCustomer(@RequestBody CustomerInfo customer,
+			@CookieValue(value = "jwt_token", required = false) String jwtToken) {
 
-  /**
-   * Validate user/password.
-   */
-  @RequestMapping(value = "/validateid", method = RequestMethod.POST, consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE, produces = "application/json")
-  public ValidateCustomerResponse validateCustomer(@RequestHeader(name = "acmeair-id", required = false) String headerId,
-      @RequestHeader(name = "acmeair-date", required = false) String headerDate, @RequestHeader(name = "acmeair-sig-body", required = false) String headerSigBody,
-      @RequestHeader(name = "acmeair-signature", required = false) String headerSig, @RequestParam String login, @RequestParam String password) {
+		String username = customer.get_id();
 
-    if (logger.isLoggable(Level.FINE)) {
-      logger.fine("validateid : login " + login + " password " + password);
-    }
+		if (secUtils.secureUserCalls() && !secUtils.validateJwt(username, jwtToken)) {
+			throw new ForbiddenException();
+		}
 
-    // verify header
-    if (secUtils.secureServiceCalls()) {
-      String body = "login=" + login + "&password=" + password;
-      secUtils.verifyBodyHash(body, headerSigBody);
-      secUtils.verifyFullSignature("POST", "/validateid", headerId, headerDate, headerSigBody, headerSig);
-    }
+		String customerFromDb = customerService.getCustomerByUsernameAndPassword(username, customer.getPassword());
 
-    Boolean validCustomer = customerService.validateCustomer(login, password);
+		if (logger.isLoggable(Level.FINE)) {
+			logger.fine("putCustomer : " + customerFromDb);
+		}
 
-    ValidateCustomerResponse result = new ValidateCustomerResponse();
-    result.validCustomer = validCustomer;
-    
-    this.doWork(80l);
+		if (customerFromDb == null) {
+			// either the customer doesn't exist or the password is wrong
+			throw new ForbiddenException();
+		}
 
-    return result;
-  }
+		customerService.updateCustomer(username, customer);
 
-  /**
-   * Update reward miles.
-   */
-  @RequestMapping(value = "/updateCustomerTotalMiles", method = RequestMethod.POST, consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE, produces = "application/json")
-  public UpdateMilesResult updateCustomerTotalMiles(@RequestHeader(name = "acmeair-id", required = false) String headerId,
-      @RequestHeader(name = "acmeair-date", required = false) String headerDate, @RequestHeader(name = "acmeair-sig-body", required = false) String headerSigBody,
-      @RequestHeader(name = "acmeair-signature", required = false) String headerSig,
-      @RequestParam String customerid,  @RequestParam Long miles) {
+		// Retrieve the latest results
+		customerFromDb = customerService.getCustomerByUsernameAndPassword(username, customer.getPassword());
 
-    try {
-      if (secUtils.secureServiceCalls()) {
-        String body = "miles=" + miles + "&customerid=" + customerid;
-        secUtils.verifyBodyHash(body, headerSigBody);
-        secUtils.verifyFullSignature("POST", "/updateCustomerTotalMiles", headerId, headerDate, headerSigBody,
-            headerSig);
-      }
+		this.doWork(200l);
 
-      ObjectMapper mapper = new ObjectMapper();
-      JsonNode customerJson = mapper.readTree(customerService.getCustomerByUsername(customerid));
+		return customerFromDb;
+	}
 
-      JsonNode addressJson = customerJson.get("address");
+	/**
+	 * Validate user/password.
+	 */
+	@RequestMapping(value = "/validateid", method = RequestMethod.POST, consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE, produces = "application/json")
+	public ValidateCustomerResponse validateCustomer(
+			@RequestHeader(name = "acmeair-id", required = false) String headerId,
+			@RequestHeader(name = "acmeair-date", required = false) String headerDate,
+			@RequestHeader(name = "acmeair-sig-body", required = false) String headerSigBody,
+			@RequestHeader(name = "acmeair-signature", required = false) String headerSig, @RequestParam String login,
+			@RequestParam String password) {
 
-      String streetAddress2 = null;
+		if (logger.isLoggable(Level.FINE)) {
+			logger.fine("validateid : login " + login + " password " + password);
+		}
 
-      if (addressJson.get("streetAddress2") != null
-          && !addressJson.get("streetAddress2").toString().equals("null")) {
-        streetAddress2 = addressJson.get("streetAddress2").asText();
-      }
+		// verify header
+		if (secUtils.secureServiceCalls()) {
+			String body = "login=" + login + "&password=" + password;
+			secUtils.verifyBodyHash(body, headerSigBody);
+			secUtils.verifyFullSignature("POST", "/validateid", headerId, headerDate, headerSigBody, headerSig);
+		}
 
-      AddressInfo addressInfo = new AddressInfo(addressJson.get("streetAddress1").asText(), streetAddress2,
-          addressJson.get("city").asText(), addressJson.get("stateProvince").asText(),
-          addressJson.get("country").asText(), addressJson.get("postalCode").asText());
+		Boolean validCustomer = customerService.validateCustomer(login, password);
 
-      Long milesUpdate = Integer.parseInt(customerJson.get("total_miles").asText()) + miles;
-      CustomerInfo customerInfo = new CustomerInfo(customerid, null, customerJson.get("status").asText(),
-          milesUpdate.intValue(), Integer.parseInt(customerJson.get("miles_ytd").asText()), addressInfo,
-          customerJson.get("phoneNumber").asText(), customerJson.get("phoneNumberType").asText());
+		ValidateCustomerResponse result = new ValidateCustomerResponse();
+		result.validCustomer = validCustomer;
 
-      customerService.updateCustomer(customerid, customerInfo);
+		this.doWork(80l);
 
-      UpdateMilesResult result = new UpdateMilesResult();
-      result.total_miles = milesUpdate;
-      
-      this.doWork(40l);
+		return result;
+	}
 
-      return result;
+	/**
+	 * Update reward miles.
+	 */
+	@RequestMapping(value = "/updateCustomerTotalMiles", method = RequestMethod.POST, consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE, produces = "application/json")
+	public UpdateMilesResult updateCustomerTotalMiles(
+			@RequestHeader(name = "acmeair-id", required = false) String headerId,
+			@RequestHeader(name = "acmeair-date", required = false) String headerDate,
+			@RequestHeader(name = "acmeair-sig-body", required = false) String headerSigBody,
+			@RequestHeader(name = "acmeair-signature", required = false) String headerSig,
+			@RequestParam String customerid, @RequestParam Long miles) {
 
-    } catch (Exception e) {
-      // TODO Auto-generated catch block
-      e.printStackTrace();
-      throw new InternalServerErrorException();
-    }
-  }
+		try {
+			if (secUtils.secureServiceCalls()) {
+				String body = "miles=" + miles + "&customerid=" + customerid;
+				secUtils.verifyBodyHash(body, headerSigBody);
+				secUtils.verifyFullSignature("POST", "/updateCustomerTotalMiles", headerId, headerDate, headerSigBody,
+						headerSig);
+			}
 
-  @RequestMapping("/")
-  public String checkStatus() {
-    return "OK"+this.port;
+			ObjectMapper mapper = new ObjectMapper();
+			JsonNode customerJson = mapper.readTree(customerService.getCustomerByUsername(customerid));
 
-  }
-  
-  private void doWork(long stime) {
-	  	CustomerServiceRest.users.incrementAndGet();
+			JsonNode addressJson = customerJson.get("address");
+
+			String streetAddress2 = null;
+
+			if (addressJson.get("streetAddress2") != null
+					&& !addressJson.get("streetAddress2").toString().equals("null")) {
+				streetAddress2 = addressJson.get("streetAddress2").asText();
+			}
+
+			AddressInfo addressInfo = new AddressInfo(addressJson.get("streetAddress1").asText(), streetAddress2,
+					addressJson.get("city").asText(), addressJson.get("stateProvince").asText(),
+					addressJson.get("country").asText(), addressJson.get("postalCode").asText());
+
+			Long milesUpdate = Integer.parseInt(customerJson.get("total_miles").asText()) + miles;
+			CustomerInfo customerInfo = new CustomerInfo(customerid, null, customerJson.get("status").asText(),
+					milesUpdate.intValue(), Integer.parseInt(customerJson.get("miles_ytd").asText()), addressInfo,
+					customerJson.get("phoneNumber").asText(), customerJson.get("phoneNumberType").asText());
+
+			customerService.updateCustomer(customerid, customerInfo);
+
+			UpdateMilesResult result = new UpdateMilesResult();
+			result.total_miles = milesUpdate;
+
+			this.doWork(40l);
+
+			return result;
+
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new InternalServerErrorException();
+		}
+	}
+
+	@RequestMapping("/")
+	public String checkStatus() {
+		return "OK" + this.port;
+
+	}
+
+	private void doWork(long stime) {
+		CustomerServiceRest.users.incrementAndGet();
 		Double isTime = Long.valueOf(stime).doubleValue();
 		Float d = (float) (isTime.floatValue() * (CustomerServiceRest.users.floatValue() / this.hw));
 		try {
@@ -225,5 +241,20 @@ public class CustomerServiceRest {
 		} finally {
 			CustomerServiceRest.users.decrementAndGet();
 		}
+	}
+
+	@Override
+	public Float getHw() {
+		return this.hw;
+	}
+
+	@Override
+	public String getName() {
+		return this.msname;
+	}
+
+	@Override
+	public void setHw(Float hw) {
+		this.hw = hw;
 	}
 }

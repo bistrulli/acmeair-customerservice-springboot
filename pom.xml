@@ -50,6 +50,11 @@
             <artifactId>java-jwt</artifactId>
             <version>3.4.1-modified</version>
         </dependency>
+        <dependency>
+			<groupId>ctrlmnt</groupId>
+			<artifactId>ctrlmnt</artifactId>
+			<version>0.0.1-SNAPSHOT</version>
+		</dependency>
     </dependencies>
 
     <!-- Required for a standalone JAR: -->
