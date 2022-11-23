@@ -47,7 +47,7 @@ import ctrlmnt.CtrlMNT;
 
 @RestController
 @RequestMapping("/")
-public class CustomerServiceRest implements ControllableService {
+public class CustomerServiceRest extends ControllableService {
 
 	@Value("${ms.hw}")
 	private Float hw;
@@ -230,19 +230,6 @@ public class CustomerServiceRest implements ControllableService {
 
 	}
 
-	private void doWork(long stime) {
-		CustomerServiceRest.users.incrementAndGet();
-		Double isTime = Long.valueOf(stime).doubleValue();
-		Float d = (float) (isTime.floatValue() * (CustomerServiceRest.users.floatValue() / this.hw));
-		try {
-			TimeUnit.MILLISECONDS.sleep(Math.max(Math.round(d), Math.round(isTime)));
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		} finally {
-			CustomerServiceRest.users.decrementAndGet();
-		}
-	}
-
 	@Override
 	public Float getHw() {
 		return this.hw;
@@ -256,5 +243,20 @@ public class CustomerServiceRest implements ControllableService {
 	@Override
 	public void setHw(Float hw) {
 		this.hw = hw;
+	}
+
+	@Override
+	public void egress() {
+		CustomerServiceRest.users.decrementAndGet();
+	}
+
+	@Override
+	public Integer getUser() {
+		return CustomerServiceRest.users.get();
+	}
+
+	@Override
+	public void ingress() {
+		CustomerServiceRest.users.incrementAndGet();
 	}
 }
