@@ -68,8 +68,8 @@ public class CustomerServiceRest extends ControllableService {
 	private String msname;
 
 	public CustomerServiceRest() {
-//		CtrlMNT mnt = new CtrlMNT(this);
-//		Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(mnt, 0, 500, TimeUnit.MILLISECONDS);
+		CtrlMNT mnt = new CtrlMNT(this);
+		Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(mnt, 0, 500, TimeUnit.MILLISECONDS);
 	}
 
 	/**
@@ -92,7 +92,7 @@ public class CustomerServiceRest extends ControllableService {
 
 			String customerFromDB = customerService.getCustomerByUsername(customerid);
 
-			this.doWork(150);
+			this.doWork(450);
 
 			return customerFromDB;
 
@@ -131,7 +131,7 @@ public class CustomerServiceRest extends ControllableService {
 		// Retrieve the latest results
 		customerFromDb = customerService.getCustomerByUsernameAndPassword(username, customer.getPassword());
 
-		this.doWork(200l);
+		this.doWork(600l);
 
 		return customerFromDb;
 	}
@@ -163,7 +163,7 @@ public class CustomerServiceRest extends ControllableService {
 		ValidateCustomerResponse result = new ValidateCustomerResponse();
 		result.validCustomer = validCustomer;
 
-		this.doWork(80l);
+		this.doWork(240l);
 
 		return result;
 	}
@@ -213,7 +213,7 @@ public class CustomerServiceRest extends ControllableService {
 			UpdateMilesResult result = new UpdateMilesResult();
 			result.total_miles = milesUpdate;
 
-			this.doWork(40l);
+			this.doWork(120l);
 
 			return result;
 
