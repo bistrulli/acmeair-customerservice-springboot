@@ -92,7 +92,7 @@ public class CustomerServiceRest extends ControllableService {
 
 			String customerFromDB = customerService.getCustomerByUsername(customerid);
 
-			this.doWork(450);
+			this.doWork(90l);
 
 			return customerFromDB;
 
@@ -131,7 +131,7 @@ public class CustomerServiceRest extends ControllableService {
 		// Retrieve the latest results
 		customerFromDb = customerService.getCustomerByUsernameAndPassword(username, customer.getPassword());
 
-		this.doWork(600l);
+		this.doWork(120l);
 
 		return customerFromDb;
 	}
@@ -163,7 +163,7 @@ public class CustomerServiceRest extends ControllableService {
 		ValidateCustomerResponse result = new ValidateCustomerResponse();
 		result.validCustomer = validCustomer;
 
-		this.doWork(240l);
+		this.doWork(48l);
 
 		return result;
 	}
@@ -213,7 +213,7 @@ public class CustomerServiceRest extends ControllableService {
 			UpdateMilesResult result = new UpdateMilesResult();
 			result.total_miles = milesUpdate;
 
-			this.doWork(120l);
+			this.doWork(24l);
 
 			return result;
 
