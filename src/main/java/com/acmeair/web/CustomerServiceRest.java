@@ -68,8 +68,7 @@ public class CustomerServiceRest extends ControllableService {
 	private String msname;
 
 	public CustomerServiceRest() {
-		CtrlMNT mnt = new CtrlMNT(this);
-		Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(mnt, 0, 50, TimeUnit.MILLISECONDS);
+		super();
 	}
 
 	/**
