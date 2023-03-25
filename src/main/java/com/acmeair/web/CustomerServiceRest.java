@@ -66,15 +66,13 @@ public class CustomerServiceRest extends ControllableService {
 
 	@Value("${ms.name}")
 	private String msname;
-	
+
 	@Value("${ms.iscgroup}")
 	private String iscgroup;
 
 	public CustomerServiceRest() {
-		if (!this.iscgroup.equals("y")) {
-			CtrlMNT mnt = new CtrlMNT(this);
-			Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(mnt, 0, 50, TimeUnit.MILLISECONDS);
-		}
+		CtrlMNT mnt = new CtrlMNT(this);
+		Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(mnt, 0, 50, TimeUnit.MILLISECONDS);
 	}
 
 	/**
@@ -263,5 +261,9 @@ public class CustomerServiceRest extends ControllableService {
 	@Override
 	public void ingress() {
 		CustomerServiceRest.users.incrementAndGet();
+	}
+	
+	public String getIscgroup() {
+		return iscgroup;
 	}
 }
