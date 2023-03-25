@@ -68,7 +68,10 @@ public class CustomerServiceRest extends ControllableService {
 	private String msname;
 
 	public CustomerServiceRest() {
-		super();
+		if (!this.getIscgroup().equals("y")) {
+			CtrlMNT mnt = new CtrlMNT(this);
+			Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(mnt, 0, 50, TimeUnit.MILLISECONDS);
+		}
 	}
 
 	/**
