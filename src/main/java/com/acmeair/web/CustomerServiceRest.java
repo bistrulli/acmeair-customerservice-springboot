@@ -70,6 +70,18 @@ public class CustomerServiceRest extends ControllableService {
 	@Value("${ms.iscgroup}")
 	private String iscgroup;
 
+	@Value("${ms.stime1}")
+    private long stime1;
+
+	@Value("${ms.stime2}")
+    private long stime2;
+
+    @Value("${ms.stime3}")
+    private long stime3;
+
+    @Value("${ms.stime4}")
+    private long stime4;
+
 	public CustomerServiceRest() {
 		CtrlMNT mnt = new CtrlMNT(this);
 		Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(mnt, 0, 50, TimeUnit.MILLISECONDS);
@@ -95,7 +107,7 @@ public class CustomerServiceRest extends ControllableService {
 
 			String customerFromDB = customerService.getCustomerByUsername(customerid);
 
-			this.doWork(90l);
+			this.doWork(this.stime1); //90l
 
 			return customerFromDB;
 
@@ -134,7 +146,7 @@ public class CustomerServiceRest extends ControllableService {
 		// Retrieve the latest results
 		customerFromDb = customerService.getCustomerByUsernameAndPassword(username, customer.getPassword());
 
-		this.doWork(120l);
+		this.doWork(this.stime2); //120l
 
 		return customerFromDb;
 	}
@@ -166,7 +178,7 @@ public class CustomerServiceRest extends ControllableService {
 		ValidateCustomerResponse result = new ValidateCustomerResponse();
 		result.validCustomer = validCustomer;
 
-		this.doWork(48l);
+		this.doWork(this.stime3); //48l
 
 		return result;
 	}
@@ -216,7 +228,7 @@ public class CustomerServiceRest extends ControllableService {
 			UpdateMilesResult result = new UpdateMilesResult();
 			result.total_miles = milesUpdate;
 
-			this.doWork(24l);
+			this.doWork(this.stime4); //24l
 
 			return result;
 
